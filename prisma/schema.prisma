@@ -1,0 +1,279 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+generator nestgraphql {
+  provider                              = "node node_modules/prisma-nestjs-graphql"
+  output                                = "../src/@generated/prisma-nestjs-graphql"
+  noAtomicOperations                    = false
+  combineScalarFilters                  = false
+  reExport                              = None
+  emitSingle                            = false
+  emitCompiled                          = false
+  purgeOutput                           = false
+  requireSingleFieldsInWhereUniqueInput = false
+  fields_Validator_from                 = "class-validator"
+  fields_Validator_input                = true
+  fields_Scalars_from                   = "graphql-scalars"
+  fields_Scalars_input                  = true
+  useInputType_WhereInput_ALL           = "WhereInput"
+  decorate_1_type                       = "Create@(One|Many)UserArgs"
+  decorate_1_field                      = data
+  decorate_1_name                       = ValidateNested
+  decorate_1_from                       = "class-validator"
+  decorate_1_arguments                  = "[]"
+  decorate_2_type                       = "Create@(One|Many)UserArgs"
+  decorate_2_field                      = data
+  decorate_2_from                       = "class-transformer"
+  decorate_2_arguments                  = "['() => {propertyType.0}']"
+  decorate_2_name                       = Type
+  decorate_2_namedImport                = true
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum UserType {
+  EXTERNAL
+  INTERNAL
+}
+
+enum Provider {
+  EMAIL
+  FACEBOOK
+  GOOGLE
+  APPLE
+}
+
+enum OSType {
+  ANDROID
+  IOS
+  OTHER
+}
+
+enum RoleType {
+  R
+  RW
+  RWD
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum NotificationType {
+  FEEDBACK
+}
+
+enum SyncStatus {
+  SUCCESSFUL
+  FAIL
+}
+
+model User {
+  id            String         @id @default(cuid()) @db.VarChar(30)
+  firstName     String?        @db.VarChar(255)
+  lastName      String?        @db.VarChar(255)
+  displayName   String?        @db.VarChar(255)
+  title         String?        @db.VarChar(255)
+  email         String         @db.VarChar(255)
+  phone         String?        @db.VarChar(30)
+  photoUrl      String?
+  devices       Device[]
+  notifications Notification[]
+
+  @@map("users")
+}
+
+model Role {
+  id                  String               @id @default(cuid()) @db.VarChar(30)
+  hidden              Boolean              @default(false)
+  isPreset            Boolean              @default(false)
+  name                String               @db.VarChar(255)
+  userType            UserType?
+  createdAt           DateTime             @default(now())
+  systemCreatedBy     String               @db.VarChar(30)
+  createdBySystemUser SystemUser           @relation("roleCreatedBySystemUser", fields: [systemCreatedBy], references: [id])
+  updatedAt           DateTime             @default(now())
+  systemUpdatedBy     String               @db.VarChar(30)
+  updatedBySystemUser SystemUser           @relation("roleUpdatedBySystemUser", fields: [systemUpdatedBy], references: [id])
+  deletedAt           DateTime?
+  systemDeletedBy     String?              @db.VarChar(30)
+  deletedBySystemUser SystemUser?          @relation("roleDeletedBySystemUser", fields: [systemDeletedBy], references: [id])
+  systemUsers         SystemUser[]
+  roleSideNavigations RoleSideNavigation[]
+
+  @@map("roles")
+}
+
+model SystemUser {
+  id                                    String               @id @default(cuid()) @db.VarChar(30)
+  roleId                                String?              @db.VarChar(30)
+  role                                  Role?                @relation(fields: [roleId], references: [id])
+  firstName                             String               @db.VarChar(255)
+  lastName                              String               @db.VarChar(255)
+  displayName                           String               @db.VarChar(255)
+  userName                              String?              @unique @db.VarChar(255)
+  email                                 String?              @db.VarChar(255)
+  department                            String?              @db.VarChar(50)
+  photoUrl                              String?
+  systemCreatedBy                       String?              @db.VarChar(30) // optional here because first system user has not creator
+  createdByInternalUser                 SystemUser?          @relation("createdByInternalUser", fields: [systemCreatedBy], references: [id])
+  createdAt                             DateTime             @default(now())
+  systemUpdatedBy                       String?              @db.VarChar(30) // optional here because first system user has not creator
+  updatedByInternalUser                 SystemUser?          @relation("updatedByInternalUser", fields: [systemUpdatedBy], references: [id])
+  updatedAt                             DateTime             @default(now())
+  systemDeletedBy                       String?              @db.VarChar(30) // optional here because first system user has not creator
+  deletedByInternalUser                 SystemUser?          @relation("deletedByInternalUser", fields: [systemDeletedBy], references: [id])
+  deletedAt                             DateTime?
+  hidden                                Boolean              @default(false)
+  roleSideNavigationCreatedBySystemUser RoleSideNavigation[] @relation("roleSideNavigationCreatedBySystemUser")
+  createdInternalUsers                  SystemUser[]         @relation("createdByInternalUser")
+  updatedInternalUsers                  SystemUser[]         @relation("updatedByInternalUser")
+  deletedByInternalUsers                SystemUser[]         @relation("deletedByInternalUser")
+  rolesCreatedBySystemUser              Role[]               @relation("roleCreatedBySystemUser")
+  rolesUpdatedBySystemUser              Role[]               @relation("roleUpdatedBySystemUser")
+  rolesDeletedBySystemUser              Role[]               @relation("roleDeletedBySystemUser")
+  sideNavigationsUpdatedBySystemUser    SideNavigation[]     @relation("sideNavigationUpdatedBySystemUser")
+  sideNavigationsCreatedBySystemUser    SideNavigation[]     @relation("sideNavigationCreatedBySystemUser")
+  sideNavigationsDeletedBySystemUser    SideNavigation[]     @relation("sideNavigationDeletedBySystemUser")
+  systemNotifications                   SystemNotification[] @relation("systemNotifications")
+  webDevices                            WebDevice[]          @relation("webDevices")
+  configurationsCreatedBySystemUser     Configuration[]      @relation("configurationCreatedBySystemUser")
+  configurationsUpdatedBySystemUser     Configuration[]      @relation("configurationUpdatedBySystemUser")
+  templateCreatedBySystemUser           Template[]           @relation("templateCreatedBy")
+  templateUpdatedBySystemUser           Template[]           @relation("templateUpdatedBy")
+  templateDeletedBySytemUser            Template[]           @relation("templateDeletedBy")
+
+  @@map("system_users")
+}
+
+model RoleSideNavigation {
+  id                  String         @id @default(cuid()) @db.VarChar(30)
+  sideNavigationId    String         @db.VarChar(30)
+  sideNavigation      SideNavigation @relation(fields: [sideNavigationId], references: [id])
+  roleId              String         @db.VarChar(30)
+  role                Role           @relation(fields: [roleId], references: [id])
+  roleType            RoleType
+  createdAt           DateTime       @default(now())
+  systemCreatedBy     String         @db.VarChar(30)
+  createdBySystemUser SystemUser     @relation("roleSideNavigationCreatedBySystemUser", fields: [systemCreatedBy], references: [id])
+
+  @@map("role_side_navigations")
+}
+
+model SideNavigation {
+  id                  String               @id @default(cuid()) @db.VarChar(30)
+  name                String               @db.VarChar(255)
+  userType            UserType
+  icon                String?              @db.VarChar(50)
+  order               Int                  @db.Integer
+  route               String
+  parentId            String?              @db.VarChar(30)
+  parent              SideNavigation?      @relation("sideNavigationToSideNavigation", fields: [parentId], references: [id])
+  updatedAt           DateTime             @default(now())
+  systemUpdatedBy     String               @db.VarChar(30)
+  updatedBySystemUser SystemUser           @relation("sideNavigationUpdatedBySystemUser", fields: [systemUpdatedBy], references: [id])
+  createdAt           DateTime             @default(now())
+  systemCreatedBy     String               @db.VarChar(30)
+  createdBySystemUser SystemUser           @relation("sideNavigationCreatedBySystemUser", fields: [systemCreatedBy], references: [id])
+  deletedAt           DateTime?
+  systemDeletedBy     String?              @db.VarChar(30)
+  deletedBySystemUser SystemUser?          @relation("sideNavigationDeletedBySystemUser", fields: [systemDeletedBy], references: [id])
+  sideNavigations     SideNavigation[]     @relation("sideNavigationToSideNavigation")
+  roleSideNavigations RoleSideNavigation[]
+
+  @@map("side_navigations")
+}
+
+model Device {
+  id             String   @id @default(cuid()) @db.VarChar(30)
+  userId         String   @db.VarChar(30)
+  user           User     @relation(fields: [userId], references: [id])
+  deviceToken    String   @default("") @db.VarChar(255)
+  phoneModel     String   @db.VarChar(255)
+  os             OSType
+  additionalInfo Json?
+  createdAt      DateTime @default(now())
+
+  @@map("devices")
+}
+
+model WebDevice {
+  id           String     @id @default(cuid()) @db.VarChar(30)
+  systemUserId String     @db.VarChar(30)
+  systemUser   SystemUser @relation("webDevices", fields: [systemUserId], references: [id])
+  deviceToken  String     @db.VarChar(255)
+  createdAt    DateTime   @default(now())
+
+  @@map("web_devices")
+}
+
+model Notification {
+  id             String           @id @default(cuid()) @db.VarChar(30)
+  userId         String           @db.VarChar(30)
+  user           User             @relation(fields: [userId], references: [id])
+  titleKey       String           @db.VarChar(200)
+  contentKey     String
+  type           NotificationType
+  readAt         DateTime?
+  additionalInfo Json?
+  createdAt      DateTime         @default(now())
+
+  @@map("user_notifications")
+}
+
+model SystemNotification {
+  id             String           @id @default(cuid()) @db.VarChar(30)
+  systemUserId   String           @db.VarChar(30)
+  systemUser     SystemUser       @relation("systemNotifications", fields: [systemUserId], references: [id])
+  titleKey       String           @db.VarChar(200)
+  contentKey     String
+  type           NotificationType
+  readAt         DateTime?
+  additionalInfo Json?
+  createdAt      DateTime         @default(now())
+
+  @@map("systemuser_notifications")
+}
+
+model Configuration {
+  id                  String     @id @default(cuid()) @db.VarChar(30)
+  value               String     @db.VarChar(255)
+  createdAt           DateTime   @default(now())
+  systemCreatedBy     String     @db.VarChar(30)
+  createdBySystemUser SystemUser @relation("configurationCreatedBySystemUser", fields: [systemCreatedBy], references: [id])
+  updatedAt           DateTime   @default(now())
+  systemUpdatedBy     String     @db.VarChar(30)
+  updatedBySystemUser SystemUser @relation("configurationUpdatedBySystemUser", fields: [systemUpdatedBy], references: [id])
+  systemDeletedAt     DateTime?
+
+  @@map("configurations")
+}
+
+model Template {
+  id                    String      @id @default(cuid()) @db.VarChar(30)
+  createdAt             DateTime    @default(now())
+  createdBySystemUserId String      @db.VarChar(30)
+  createdBySystemUser   SystemUser  @relation("templateCreatedBy", fields: [createdBySystemUserId], references: [id])
+  updatedAt             DateTime    @default(now())
+  updatedBySystemUserId String?     @db.VarChar(30)
+  updatedBySystemUser   SystemUser? @relation("templateUpdatedBy", fields: [updatedBySystemUserId], references: [id])
+  deletedAt             DateTime?
+  deletedBySystemUserId String?     @db.VarChar(30)
+  deletedBySystemUser   SystemUser? @relation("templateDeletedBy", fields: [deletedBySystemUserId], references: [id])
+  exampleValue          String // This one is example value please remove this line when you create new module
+  // Add your more table properties below
+}
