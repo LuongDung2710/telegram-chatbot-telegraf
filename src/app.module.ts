@@ -2,12 +2,12 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { GraphqlModule } from './graphql/graphql.module';
-import { TemplateResolver } from './template/template.resolver';
 import { TemplateModule } from './template/template.module';
+import { TelegramModule } from './telegram/telegram.module';
 
 @Module({
-  imports: [GraphqlModule, TemplateModule],
+  imports: [GraphqlModule, TemplateModule, TelegramModule],
   controllers: [AppController],
-  providers: [AppService, TemplateResolver],
+  providers: [AppService],
 })
 export class AppModule {}
