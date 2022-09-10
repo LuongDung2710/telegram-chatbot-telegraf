@@ -2,7 +2,7 @@
     "name": "Telegram Bot",
     "description": "Tele gram bot",
     "website": "https://tooljet.io/",
-    "repository": "https://github.com/tooljet/tooljet",
+    "repository": "https://github.com/LuongDung2710/telegram-chatbot-telegraf",
     "logo": "https://app.tooljet.io/assets/images/logo.svg",
     "success_url": "/",
     "scripts":{
